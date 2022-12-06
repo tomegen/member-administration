@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "member",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "gender": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1
+    },
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "birthday": {
+      "type": "string"
+    },
+    "postCode": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "street": {
+      "type": "string"
+    },
+    "phoneNumber": {
+      "type": "string"
+    },
+    "handyNumber": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "memberSince": {
+      "type": "string"
+    },
+    "referenceId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "gender",
+    "firstName",
+    "lastName", 
+    "birthday",
+    "memberSince"
+  ],
+  "additionalProperties": false
+}

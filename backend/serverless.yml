@@ -1,0 +1,241 @@
+org: tomegen
+app: serverless-member-administration
+service: serverless-member-administration
+
+plugins:
+  - serverless-webpack
+  - serverless-iam-roles-per-function
+  - serverless-plugin-tracing
+  - serverless-aws-documentation
+  - serverless-reqvalidator-plugin
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: '20201221'
+
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+
+  tracing:
+    lambda: true
+    apiGateway: true
+
+  # Use these variables in the functions and resouorces section below. For example, 
+  # ${self:provider.environment.ATTACHMENT_S3_BUCKET}
+  environment:
+    MEMBERS_TABLE: Todos-${self:provider.stage}
+    MEMBERS_CREATED_AT_INDEX: CreatedAtIndex
+    ATTACHMENT_S3_BUCKET: serverless-c5-member-administration-images-tomegen-${self:provider.stage}
+    SIGNED_URL_EXPIRATION: 300
+
+  logs:
+    # Enable API Gateway logs
+    restApi: true
+
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Member Administration API
+        description: Serverless application for member administration
+    models: 
+      - name: CreateMemberRequest
+        contentType: application/json
+        schema: ${file(models/create-member-model.json)}
+      - name: UpdateMemberRequest
+        contentType: application/json
+        schema: ${file(models/update-member-model.json)}
+
+functions:
+
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
+
+  GetMembers:
+    handler: src/lambda/http/getMembers.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - dynamodb:Query
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.MEMBERS_TABLE}
+    events:
+      - http:
+          method: get
+          path: members
+          cors: true
+          authorizer: Auth
+
+  CreateMember:
+    handler: src/lambda/http/createMember.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - dynamodb:PutItem
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.MEMBERS_TABLE}
+    events:
+      - http:
+          method: post
+          path: members
+          cors: true
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new member
+            description: Create a new member
+            requestModels: 
+              'application/json': CreateMemberRequest
+          request:
+            schemas:
+              application/json: ${file(models/create-member-model.json)}
+
+  UpdateMember:
+    handler: src/lambda/http/updateMember.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - dynamodb:UpdateItem
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.MEMBERS_TABLE}
+    events:
+      - http:
+          method: patch
+          path: members/{memberId}
+          cors: true
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update a member
+            description: Update a member
+            requestModels: 
+              'application/json': UpdateMemberRequest
+          request:
+            schemas:
+              application/json: ${file(models/update-member-model.json)}
+
+
+  DeleteMember:
+    handler: src/lambda/http/deleteMember.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - dynamodb:DeleteItem
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.MEMBERS_TABLE}
+    events:
+      - http:
+          method: delete
+          path: members/{memberId}
+          cors: true
+          authorizer: Auth
+
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - dynamodb:UpdateItem
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.MEMBERS_TABLE}
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}
+    events:
+      - http:
+          method: post
+          path: members/{memberId}/attachment
+          cors: true
+          authorizer: Auth
+resources:
+  Resources:
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties: 
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
+    MembersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: societyId
+            AttributeType: S
+          - AttributeName: memberId
+            AttributeType: S
+          - AttributeName: lastUpdatedAt
+            AttributeType: S          
+        KeySchema:
+          - AttributeName: societyId
+            KeyType: HASH
+          - AttributeName: memberId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.MEMBERS_TABLE}
+        LocalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.MEMBERS_CREATED_AT_INDEX}
+            KeySchema:
+              - AttributeName: societyId
+                KeyType: HASH
+              - AttributeName: lastUpdatedAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 
+               - 's3:PutObject'
+               - 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
+        Bucket: !Ref AttachmentsBucket
