@@ -2,7 +2,7 @@ import { CreateMemberRequest } from '../requests/CreateMemberRequest'
 import * as uuid from 'uuid'
 import { UpdateMemberRequest } from "../requests/UpdateMemberRequest"
 import { createLogger } from '../utils/logger'
-import { getMembersForSocietyDao, createMemberDao, updateMemberDao, deleteMemberDao, createAttachmentPresignedUrlDao } from '../dataLayer/dataAccess'
+import { getMembersForSocietyDao, createMemberDao, updateMemberDao, deleteMemberDao, createAttachmentPresignedUrlDao, getMemberDao } from '../dataLayer/dataAccess'
 import {getAttachmentUrl} from '../dataLayer/bucketAccess'
 import { MemberItem} from '../models/MemberItem'
 import { MemberUpdate } from '../models/MemberUpdate'
@@ -22,6 +22,15 @@ export async function getMembersForSociety(society: string): Promise<string> {
     return result
 }
 
+export async function getMember(society: string, memberId: string): Promise<string> {
+    logger.info('getMember: ' + society)
+    
+    const item = await getMemberDao(society, memberId)
+
+    const result = '{ "item": ' + JSON.stringify(item) + '}'
+
+    return result
+}
 
 
 export async function createMember(societyId: string, newMember: CreateMemberRequest): Promise<string> {
@@ -131,9 +140,7 @@ export async function updateMember(society: string, memberId: string, updatedMem
 
     await updateMemberDao(society, memberId, updateMemberItem)
 
-    const result = JSON.stringify("")
-
-    return result
+    return ""
 }
 
 export async function deleteMember(society: string, memberId: string): Promise<string> {
@@ -155,7 +162,7 @@ export async function createAttachmentPresignedUrl(society: string, memberId: st
     var timeout = parseInt(process.env.SIGNED_URL_EXPIRATION)
     logger.info("Timeout: " + timeout.toString())
 
-    const attachmentUrl = await getAttachmentUrl(society, memberId, timeout)
+    const attachmentUrl = await getAttachmentUrl(memberId, timeout)
     
 
     logger.info(attachmentUrl)

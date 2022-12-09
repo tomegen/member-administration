@@ -50,7 +50,15 @@
     "firstName",
     "lastName", 
     "birthday",
-    "memberSince"
+    "memberSince",
+    "phoneNumber", 
+    "handyNumber", 
+    "email", 
+    "description", 
+    "referenceId", 
+    "postCode", 
+    "street", 
+    "city"
   ],
   "additionalProperties": false
 }

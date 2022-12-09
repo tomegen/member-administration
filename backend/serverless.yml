@@ -68,7 +68,21 @@ functions:
           path: members
           cors: true
           authorizer: Auth
-
+  GetMember:
+    handler: src/lambda/http/getMember.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - dynamodb:Query
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.MEMBERS_TABLE}
+    events:
+      - http:
+          method: get
+          path: members/{memberId}
+          cors: true
+          authorizer: Auth
   CreateMember:
     handler: src/lambda/http/createMember.handler
     iamRoleStatements:
@@ -118,8 +132,6 @@ functions:
           request:
             schemas:
               application/json: ${file(models/update-member-model.json)}
-
-
   DeleteMember:
     handler: src/lambda/http/deleteMember.handler
     iamRoleStatements:

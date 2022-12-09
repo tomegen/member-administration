@@ -9,8 +9,9 @@ const s3 = new XAWS.S3({
 
 const logger = createLogger('dataAccess')
 
-export async function getAttachmentUrl(society: string, memberId: string, timeout: number): Promise<string> {
+export async function getAttachmentUrl(memberId: string, timeout: number): Promise<string> {
 
+    logger.info("getAttachmentURL")
     const bucket = process.env.ATTACHMENT_S3_BUCKET
     const attachmentUrl = await s3.getSignedUrl('putObject', {
         Bucket: bucket,
