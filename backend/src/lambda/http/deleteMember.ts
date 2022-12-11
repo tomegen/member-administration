@@ -4,8 +4,9 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
 
-import { deleteMember } from '../../businessLogic/members'
+import { Members } from '../../businessLogic/members'
 import { getSocietyId } from '../utils'
+import { DataAccess } from '../../dataLayer/dataAccess'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -15,7 +16,7 @@ export const handler = middy(
     return {statusCode: 200, headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': true
-    }, body: await deleteMember(society, memberId)}
+    }, body: await new Members(new DataAccess()).deleteMember(society, memberId)}
 
   }
 )

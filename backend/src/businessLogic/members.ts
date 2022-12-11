@@ -2,30 +2,35 @@ import { CreateMemberRequest } from '../requests/CreateMemberRequest'
 import * as uuid from 'uuid'
 import { UpdateMemberRequest } from "../requests/UpdateMemberRequest"
 import { createLogger } from '../utils/logger'
-import { getMembersForSocietyDao, createMemberDao, updateMemberDao, deleteMemberDao, createAttachmentPresignedUrlDao, getMemberDao } from '../dataLayer/dataAccess'
 import {getAttachmentUrl} from '../dataLayer/bucketAccess'
 import { MemberItem} from '../models/MemberItem'
 import { MemberUpdate } from '../models/MemberUpdate'
 import { MemberDeletion } from '../models/MemberDeletion'
+import { DataAccess } from '../dataLayer/dataAccess'
 
 
-const logger = createLogger('todos')
+export class Members {
+    logger: any
+    dataAccess: DataAccess
+    constructor(dataAccess: DataAccess){
+        this.dataAccess = dataAccess
+        this.logger = createLogger('todos')
+    }    
 
-
-export async function getMembersForSociety(society: string): Promise<string> {
-    logger.info('getMembersForSociety: ' + society)
+async getMembersForSociety(society: string): Promise<string> {
+    this.logger.info('getMembersForSociety: ' + society)
     
-    const items = await getMembersForSocietyDao(society)
+    const items = await this.dataAccess.getMembersForSocietyDao(society)
 
     const result = '{ "items": ' + JSON.stringify(items) + '}'
 
     return result
 }
 
-export async function getMember(society: string, memberId: string): Promise<string> {
-    logger.info('getMember: ' + society)
+async getMember(society: string, memberId: string): Promise<string> {
+    this.logger.info('getMember: ' + society)
     
-    const item = await getMemberDao(society, memberId)
+    const item = await this.dataAccess.getMemberDao(society, memberId)
 
     const result = '{ "item": ' + JSON.stringify(item) + '}'
 
@@ -33,7 +38,7 @@ export async function getMember(society: string, memberId: string): Promise<stri
 }
 
 
-export async function createMember(societyId: string, newMember: CreateMemberRequest): Promise<string> {
+async createMember(societyId: string, newMember: CreateMemberRequest): Promise<string> {
 
     const memberId = uuid.v4()
     const active = true
@@ -77,7 +82,7 @@ export async function createMember(societyId: string, newMember: CreateMemberReq
         referenceId
     }
 
-    await createMemberDao(item)
+    await this.dataAccess.createMemberDao(item)
 
     
     const res = {
@@ -106,7 +111,7 @@ export async function createMember(societyId: string, newMember: CreateMemberReq
 }
 
 
-export async function updateMember(society: string, memberId: string, updatedMember: UpdateMemberRequest): Promise<string> {
+async updateMember(society: string, memberId: string, updatedMember: UpdateMemberRequest): Promise<string> {
 
     const gender = updatedMember.gender
     const firstName = updatedMember.firstName
@@ -178,12 +183,12 @@ export async function updateMember(society: string, memberId: string, updatedMem
         lastUpdatedAt
     }
 
-    await updateMemberDao(society, memberId, updateMemberItem)
+    await this.dataAccess.updateMemberDao(society, memberId, updateMemberItem)
 
     return ""
 }
 
-export async function deleteMember(society: string, memberId: string): Promise<string> {
+async deleteMember(society: string, memberId: string): Promise<string> {
     const active = false
     const inactiveTimestamp = new Date().toISOString()
 
@@ -191,26 +196,27 @@ export async function deleteMember(society: string, memberId: string): Promise<s
         active, 
         inactiveTimestamp
     }
-    await deleteMemberDao(society, memberId, deletedMemberItem)
+    await this.dataAccess.deleteMemberDao(society, memberId, deletedMemberItem)
     
     return ""
 }
 
 
-export async function createAttachmentPresignedUrl(society: string, memberId: string): Promise<string> {
+async createAttachmentPresignedUrl(society: string, memberId: string): Promise<string> {
 
     var timeout = parseInt(process.env.SIGNED_URL_EXPIRATION)
-    logger.info("Timeout: " + timeout.toString())
+    this.logger.info("Timeout: " + timeout.toString())
 
     const attachmentUrl = await getAttachmentUrl(memberId, timeout)
     
 
-    logger.info(attachmentUrl)
+    this.logger.info(attachmentUrl)
 
-    await createAttachmentPresignedUrlDao(society, memberId)
+    await this.dataAccess.createAttachmentPresignedUrlDao(society, memberId)
 
     const result = '{ "uploadUrl": ' + JSON.stringify(attachmentUrl) + '}'
     
     return result
+}
 }
   

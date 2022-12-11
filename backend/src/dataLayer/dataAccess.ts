@@ -1,17 +1,23 @@
-import * as AWS from "aws-sdk"
-import * as AWSXRay from "aws-xray-sdk"
 import { MemberDeletion } from "../models/MemberDeletion"
 import {MemberItem } from '../models/MemberItem'
 import {MemberUpdate } from '../models/MemberUpdate'
+import * as AWS from "aws-sdk"
+import * as AWSXRay from "aws-xray-sdk"
+
+export class DataAccess {
+    tableName: string
+    docClient: any
+    constructor(){
+        this.tableName = process.env.MEMBERS_TABLE
+        const XAWS = AWSXRay.captureAWS(AWS)
+        this.docClient = new XAWS.DynamoDB.DocumentClient()
+    }
 
 
-const tableName = process.env.MEMBERS_TABLE
-const XAWS = AWSXRay.captureAWS(AWS)
-const docClient = new XAWS.DynamoDB.DocumentClient()
 
 
-export async function getMembersForSocietyDao(society: string): Promise<string> {
-const result = await docClient.query({
+async getMembersForSocietyDao(society: string): Promise<string> {
+const result = await this.docClient.query({
     TableName: process.env.MEMBERS_TABLE,
     KeyConditionExpression: 'societyId = :societyId',
     ExpressionAttributeValues: {
@@ -23,8 +29,8 @@ return result.Items
 
 }
 
-export async function getMemberDao(society: string, memberId: string): Promise<string> {
-    const result = await docClient.query({
+async getMemberDao(society: string, memberId: string): Promise<string> {
+    const result = await this.docClient.query({
         TableName: process.env.MEMBERS_TABLE,
         KeyConditionExpression: 'societyId = :societyId AND memberId = :memberId',
         ExpressionAttributeValues: {
@@ -37,17 +43,17 @@ export async function getMemberDao(society: string, memberId: string): Promise<s
     
     }
 
-export async function createMemberDao(item: MemberItem): Promise<void> {
+async createMemberDao(item: MemberItem): Promise<void> {
 
-    await docClient
+    await this.docClient
         .put({
-        TableName: tableName,
+        TableName: this.tableName,
         Item: item
         })
         .promise()
 }
 
-export async function updateMemberDao(society: string, memberId: string, updatedMember: MemberUpdate): Promise<void> {
+async updateMemberDao(society: string, memberId: string, updatedMember: MemberUpdate): Promise<void> {
 
     let updateExpression='set';
     let ExpressionAttributeNames={};
@@ -61,8 +67,8 @@ export async function updateMemberDao(society: string, memberId: string, updated
     updateExpression = updateExpression.substring(0, updateExpression.length-1)
 
 
-    docClient.update({
-        TableName: tableName,
+    this.docClient.update({
+        TableName: this.tableName,
         Key: {
             "societyId": society,
             "memberId": memberId
@@ -74,15 +80,15 @@ export async function updateMemberDao(society: string, memberId: string, updated
 
 }
 
-export async function deleteMemberDao(society: string, memberId: string, deletedMember: MemberDeletion): Promise<void> {
+async deleteMemberDao(society: string, memberId: string, deletedMember: MemberDeletion): Promise<void> {
 
     
     //const lastUpdatedAt = new Date().toISOString()
     console.log(deletedMember)
     
     // This is only a temporary solution, because in the future a member should not be deleted. He should be set to inactive
-    docClient.delete({
-        TableName: tableName,
+    this.docClient.delete({
+        TableName: this.tableName,
         Key: {
             "societyId": society,
             "memberId": memberId
@@ -110,12 +116,12 @@ export async function deleteMemberDao(society: string, memberId: string, deleted
 
 }
 
-export async function createAttachmentPresignedUrlDao(society: string, memberId: string): Promise<void> {
+async createAttachmentPresignedUrlDao(society: string, memberId: string): Promise<void> {
 
     const bucket = process.env.ATTACHMENT_S3_BUCKET
 
-    docClient.update({
-        TableName: tableName,
+    this.docClient.update({
+        TableName: this.tableName,
         Key: {
             "societyId": society,
             "memberId": memberId
@@ -129,6 +135,4 @@ export async function createAttachmentPresignedUrlDao(society: string, memberId:
     }).promise()
 
 }
-
-
-
+}

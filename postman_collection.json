@@ -38,6 +38,36 @@
 					"response": []
 				},
 				{
+					"name": "Get a member by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{apiId}}.execute-api.us-east-1.amazonaws.com/dev/members/ID",
+							"protocol": "https",
+							"host": [
+								"{{apiId}}",
+								"execute-api",
+								"us-east-1",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								"dev",
+								"members",
+								"ID"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create member",
 					"request": {
 						"method": "POST",
@@ -79,7 +109,7 @@
 				{
 					"name": "Update member",
 					"request": {
-						"method": "PUT",
+						"method": "PATCH",
 						"header": [
 							{
 								"key": "Content-Type",
@@ -98,7 +128,7 @@
 							"raw": "{\n\t\"gender\": \"w\",\n\t\"firstName\": \"Tommi\",\n\t\"lastName\": \"Ege\",\n\t\"birthday\": \"01.01.1998\",\n\t\"memberSince\": \"02.01.1998\"\n}"
 						},
 						"url": {
-							"raw": "https://{{apiId}}.execute-api.us-east-1.amazonaws.com/dev/members/35dd600f-43c2-4649-903c-615e1586a26f",
+							"raw": "https://{{apiId}}.execute-api.us-east-1.amazonaws.com/dev/members/4b046a69-38df-4dbf-8c02-b20f67ce8432",
 							"protocol": "https",
 							"host": [
 								"{{apiId}}",
@@ -110,7 +140,7 @@
 							"path": [
 								"dev",
 								"members",
-								"35dd600f-43c2-4649-903c-615e1586a26f"
+								"4b046a69-38df-4dbf-8c02-b20f67ce8432"
 							]
 						}
 					},
@@ -237,13 +267,11 @@
 	"variable": [
 		{
 			"key": "apiId",
-			"value": "",
-			"type": "string"
+			"value": ""
 		},
 		{
 			"key": "authToken",
-			"value": "",
-			"type": "string"
+			"value": ""
 		}
 	]
 }
