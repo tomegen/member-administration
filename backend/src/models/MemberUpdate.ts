@@ -11,5 +11,6 @@ export interface MemberUpdate {
   handyNumber: string, 
   email: string, 
   memberSince: string, 
-  referenceId: string
+  referenceId: string,
+  lastUpdatedAt: string
 }

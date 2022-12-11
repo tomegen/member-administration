@@ -108,19 +108,58 @@ export async function createMember(societyId: string, newMember: CreateMemberReq
 
 export async function updateMember(society: string, memberId: string, updatedMember: UpdateMemberRequest): Promise<string> {
 
-    const description = updatedMember.description
     const gender = updatedMember.gender
     const firstName = updatedMember.firstName
     const lastName = updatedMember.lastName
     const birthday = updatedMember.birthday
-    const postCode = updatedMember.postCode
-    const city = updatedMember.city
-    const street = updatedMember.street
-    const phoneNumber = updatedMember.phoneNumber
-    const handyNumber = updatedMember.handyNumber
-    const email = updatedMember.email
     const memberSince = updatedMember.memberSince
-    const referenceId = updatedMember.referenceId
+    const lastUpdatedAt = new Date().toISOString()
+
+
+    //if not mandatory field is not set, store "" in the database
+    let description = updatedMember.description
+    let postCode = updatedMember.postCode
+    let city = updatedMember.city
+    let street = updatedMember.street
+    let phoneNumber = updatedMember.phoneNumber
+    let handyNumber = updatedMember.handyNumber
+    let email = updatedMember.email
+    let referenceId = updatedMember.referenceId
+
+    if(!description){
+        description = ""
+    }
+
+    if(!postCode){
+        postCode = ""
+    }
+
+    if(!city){
+        city = ""
+    }
+
+    if(!street){
+        street = ""
+    }
+
+    if(!phoneNumber){
+        phoneNumber = ""
+    }
+
+    if(!handyNumber){
+        handyNumber = ""
+    }
+
+    if(!email){
+        email = ""
+    }
+
+    if(!referenceId){
+        referenceId = ""
+    }
+
+
+
 
     const updateMemberItem : MemberUpdate = {
         description, 
@@ -135,7 +174,8 @@ export async function updateMember(society: string, memberId: string, updatedMem
         handyNumber, 
         email, 
         memberSince, 
-        referenceId
+        referenceId,
+        lastUpdatedAt
     }
 
     await updateMemberDao(society, memberId, updateMemberItem)

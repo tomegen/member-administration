@@ -3,9 +3,6 @@
   "title": "member",
   "type": "object",
   "properties": {
-    "description": {
-      "type": "string"
-    },
     "gender": {
       "type": "string",
       "minLength": 1,
@@ -20,28 +17,7 @@
     "birthday": {
       "type": "string"
     },
-    "postCode": {
-      "type": "string"
-    },
-    "city": {
-      "type": "string"
-    },
-    "street": {
-      "type": "string"
-    },
-    "phoneNumber": {
-      "type": "string"
-    },
-    "handyNumber": {
-      "type": "string"
-    },
-    "email": {
-      "type": "string"
-    },
     "memberSince": {
-      "type": "string"
-    },
-    "referenceId": {
       "type": "string"
     }
   },
@@ -50,15 +26,7 @@
     "firstName",
     "lastName", 
     "birthday",
-    "memberSince",
-    "phoneNumber", 
-    "handyNumber", 
-    "email", 
-    "description", 
-    "referenceId", 
-    "postCode", 
-    "street", 
-    "city"
+    "memberSince"
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }

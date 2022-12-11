@@ -1,9 +1,7 @@
 import 'source-map-support/register'
-
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
-
 import { updateMember } from '../../businessLogic/members'
 import { UpdateMemberRequest } from '../../requests/UpdateMemberRequest'
 import { getSocietyId } from '../utils'

@@ -49,7 +49,17 @@ export async function createMemberDao(item: MemberItem): Promise<void> {
 
 export async function updateMemberDao(society: string, memberId: string, updatedMember: MemberUpdate): Promise<void> {
 
-    const lastUpdatedAt = new Date().toISOString()
+    let updateExpression='set';
+    let ExpressionAttributeNames={};
+    let ExpressionAttributeValues = {};
+    for (const property in updatedMember) {
+        updateExpression += ` #${property} = :${property} ,`;
+        ExpressionAttributeNames['#'+ property] = property ;
+        ExpressionAttributeValues[':'+ property]=updatedMember[property];
+    }
+
+    updateExpression = updateExpression.substring(0, updateExpression.length-1)
+
 
     docClient.update({
         TableName: tableName,
@@ -57,26 +67,9 @@ export async function updateMemberDao(society: string, memberId: string, updated
             "societyId": society,
             "memberId": memberId
         },
-        ExpressionAttributeNames: {"#N": "lastUpdatedAt"},
-        UpdateExpression: "set #N = :lastUpdatedAt, description = :description, gender = :gender, firstName = :firstName, lastName = :lastName,"
-        + " birthday = :birthday, postCode = :postCode, city = :city, street = :street, phoneNumber = :phoneNumber, handyNumber = :handyNumber,"
-        + " email = :email, memberSince = :memberSince, referenceId = :referenceId",
-        ExpressionAttributeValues: {
-            ':lastUpdatedAt': lastUpdatedAt,
-            ':gender': updatedMember.gender,
-            ':firstName': updatedMember.firstName,
-            ':lastName': updatedMember.lastName,
-            ':birthday': updatedMember.birthday,
-            ':postCode': updatedMember.postCode,
-            ':city': updatedMember.city,
-            ':street': updatedMember.street,
-            ':phoneNumber': updatedMember.phoneNumber,
-            ':handyNumber': updatedMember.handyNumber,
-            ':email': updatedMember.email,
-            ':memberSince': updatedMember.memberSince,
-            ':referenceId': updatedMember.referenceId
-        },
-        ReturnValues: "UPDATED_NEW"
+        UpdateExpression: updateExpression,
+        ExpressionAttributeNames: ExpressionAttributeNames,
+        ExpressionAttributeValues: ExpressionAttributeValues,
     }).promise()
 
 }
